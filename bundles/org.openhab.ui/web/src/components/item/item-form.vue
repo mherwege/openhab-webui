@@ -37,8 +37,7 @@
                                               It is independent from the state visualization in the UI, which is defined through the state description pattern.' : ''"
                        :disabled="!editable"
                        :value="itemDimension ? itemUnit : ''"
-                       @change="itemUnit = $event.target.value"
-                       :clear-button="editable" />
+                       @change="itemUnit = $event.target.value" />
         <f7-list-input v-show="itemDimension"
                        label="State Description Pattern"
                        type="text"
@@ -245,7 +244,7 @@ export default {
     },
     onNameInput (event) {
       this.item.name = event.target.value
-      this.thisnameErrorMessage = this.validateItemName(this.item.name)
+      this.$set(this, 'nameErrorMessage', this.validateItemName(this.item.name))
     },
     deleteGroup (event) {
       const group = event.target.previousSibling.innerText
