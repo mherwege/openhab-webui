@@ -68,6 +68,11 @@ export default {
       oldGroupUnit: ''
     }
   },
+  watch: {
+    dimensionsReady (newValue, oldValue) {
+      if (oldValue === false && newValue === true) this.initializeAutocompleteGroupUnit()
+    }
+  },
   computed: {
     editable () {
       return this.createMode || (this.item && this.item.editable)
@@ -226,7 +231,7 @@ export default {
     if (!this.createMode && this.groupDimension) {
       this.oldGroupDimension = this.groupDimension
       this.oldGroupUnit = this.groupUnit
-      this.initializeAutocompleteGroupUnit()
+      if (this.dimensionsReady) this.initializeAutocompleteGroupUnit()
     }
   },
   beforeDestroy () {

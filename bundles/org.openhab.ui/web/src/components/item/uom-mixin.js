@@ -20,16 +20,6 @@ export default {
     }).then(this.dimensionsReady = true)
   },
   computed: {
-    unitsReady () {
-      const ready = this.measurementSystem && this.dimensionsReady
-      if (!ready) return false
-      if (this.item.type === 'Group') {
-        this.initializeAutocompleteGroupUnit(this.groupDimension)
-      } else {
-        this.initializeAutocompleteUnit(this.itemDimension)
-      }
-      return true
-    },
     unit () {
       if (!this.dimensionsReady) return ''
       return this.item.unit ? this.item.unit : (this.createMode ? this.getUnitHint(this.dimension) : this.configuredUnit)
