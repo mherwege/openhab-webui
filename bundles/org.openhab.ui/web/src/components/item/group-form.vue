@@ -18,7 +18,7 @@
       </select>
     </f7-list-item>
     <!-- (Internal) Unit & State Description -->
-    <f7-list-input v-show="groupType && groupDimension && unitsReady"
+    <f7-list-input v-show="groupType && groupDimension && dimensionsReady"
                    ref="groupUnit"
                    label="Unit"
                    type="text"

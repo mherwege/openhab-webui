@@ -29,7 +29,7 @@
         </f7-list-item>
         <!-- (Internal) Unit & State Description -->
         <!-- Use v-show instead of v-if, because otherwise the autocomplete for unit cannot be initialized -->
-        <f7-list-input v-show="itemDimension && unitsReady"
+        <f7-list-input v-show="itemDimension && dimensionsReady"
                        ref="unit"
                        label="Unit"
                        type="text"
