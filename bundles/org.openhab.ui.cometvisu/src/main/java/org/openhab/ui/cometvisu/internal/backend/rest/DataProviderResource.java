@@ -15,9 +15,12 @@ package org.openhab.ui.cometvisu.internal.backend.rest;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -27,6 +30,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.core.io.rest.RESTConstants;
 import org.openhab.core.io.rest.RESTResource;
 import org.openhab.core.items.GroupItem;
@@ -35,6 +39,8 @@ import org.openhab.core.items.ItemRegistry;
 import org.openhab.core.persistence.PersistenceItemInfo;
 import org.openhab.core.persistence.PersistenceService;
 import org.openhab.core.persistence.QueryablePersistenceService;
+import org.openhab.core.persistence.registry.PersistenceServiceConfiguration;
+import org.openhab.core.persistence.registry.PersistenceServiceConfigurationRegistry;
 import org.openhab.ui.cometvisu.internal.Config;
 import org.openhab.ui.cometvisu.internal.ManagerSettings;
 import org.openhab.ui.cometvisu.internal.backend.model.rest.DataProviderEntry;
@@ -67,6 +73,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
  * @author Tobias Bräutigam - Initial contribution
  * @author Wouter Born - Migrated to JAX-RS Whiteboard Specification
  * @author Wouter Born - Migrated to OpenAPI annotations
+ * @author Mark Herwege - Map aliases back to item names
  */
 @Component
 @JaxrsResource
@@ -80,11 +87,14 @@ public class DataProviderResource implements RESTResource {
     private final Logger logger = LoggerFactory.getLogger(DataProviderResource.class);
 
     private final ItemRegistry itemRegistry;
+    private final PersistenceServiceConfigurationRegistry configurationRegistry;
     private final Map<String, QueryablePersistenceService> persistenceServices = new HashMap<>();
 
     @Activate
-    public DataProviderResource(final @Reference ItemRegistry itemRegistry) {
+    public DataProviderResource(final @Reference ItemRegistry itemRegistry,
+            final @Reference PersistenceServiceConfigurationRegistry configurationRegistry) {
         this.itemRegistry = itemRegistry;
+        this.configurationRegistry = configurationRegistry;
     }
 
     @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
@@ -204,7 +214,38 @@ public class DataProviderResource implements RESTResource {
     public Response getRRDs() {
         DataProviderResponse res = new DataProviderResponse();
         for (final QueryablePersistenceService service : persistenceServices.values()) {
-            for (final PersistenceItemInfo info : service.getItemInfo()) {
+            PersistenceServiceConfiguration config = configurationRegistry.get(service.getId());
+            Map<String, String> aliases = config != null ? config.getAliases() : Map.of();
+            Set<PersistenceItemInfo> itemInfo = service.getItemInfo().stream().map(info -> {
+                String alias = aliases.get(info.getName());
+                if (alias != null) {
+                    return new PersistenceItemInfo() {
+
+                        @Override
+                        public String getName() {
+                            return alias;
+                        }
+
+                        @Override
+                        public @Nullable Integer getCount() {
+                            return info.getCount();
+                        }
+
+                        @Override
+                        public @Nullable Date getEarliest() {
+                            return info.getEarliest();
+                        }
+
+                        @Override
+                        public @Nullable Date getLatest() {
+                            return info.getLatest();
+                        }
+                    };
+                } else {
+                    return info;
+                }
+            }).collect(Collectors.toSet());
+            for (final PersistenceItemInfo info : itemInfo) {
                 DataProviderEntry entry = new DataProviderEntry();
                 entry.setLabel(info.getName() + "(" + info.getCount() + ")");
                 entry.setValue(info.getName());
