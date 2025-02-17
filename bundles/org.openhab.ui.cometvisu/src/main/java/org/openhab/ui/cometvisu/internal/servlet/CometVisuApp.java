@@ -29,6 +29,8 @@ import org.openhab.core.items.ItemRegistry;
 import org.openhab.core.model.sitemap.SitemapProvider;
 import org.openhab.core.persistence.PersistenceService;
 import org.openhab.core.persistence.QueryablePersistenceService;
+import org.openhab.core.persistence.registry.PersistenceServiceConfiguration;
+import org.openhab.core.persistence.registry.PersistenceServiceConfigurationRegistry;
 import org.openhab.core.ui.icon.IconProvider;
 import org.openhab.core.ui.items.ItemUIRegistry;
 import org.openhab.ui.cometvisu.internal.Config;
@@ -52,6 +54,7 @@ import org.slf4j.LoggerFactory;
  * registers the CometVisuServlet-Service
  *
  * @author Tobias Bräutigam - Initial contribution
+ * @author Mark Herwege - Support aliases
  */
 @Component(immediate = true, service = CometVisuApp.class, configurationPid = "org.openhab.cometvisu", //
         property = Constants.SERVICE_PID + "=org.openhab.cometvisu")
@@ -77,6 +80,8 @@ public class CometVisuApp {
     private CometVisuServlet servlet;
 
     protected static Map<String, QueryablePersistenceService> persistenceServices = new HashMap<>();
+
+    private static PersistenceServiceConfigurationRegistry persistenceServiceConfigurationRegistry;
 
     private final ClientInstaller installer = ClientInstaller.getInstance();
 
@@ -120,6 +125,26 @@ public class CometVisuApp {
 
     public static Map<String, QueryablePersistenceService> getPersistenceServices() {
         return persistenceServices;
+    }
+
+    @Reference(cardinality = ReferenceCardinality.MANDATORY)
+    public void setPersistenceServiceConfigurationRegistry(PersistenceServiceConfigurationRegistry registry) {
+        CometVisuApp.persistenceServiceConfigurationRegistry = registry;
+    }
+
+    public void unsetPersistenceServiceConfigurationRegistry() {
+        CometVisuApp.persistenceServiceConfigurationRegistry = null;
+    }
+
+    public static Map<String, String> getAliases(String serviceId) {
+        PersistenceServiceConfigurationRegistry registry = persistenceServiceConfigurationRegistry;
+        if (registry != null) {
+            PersistenceServiceConfiguration config = registry.get(serviceId);
+            if (config != null) {
+                return config.getAliases();
+            }
+        }
+        return Map.of();
     }
 
     public List<IconProvider> getIconProviders() {
