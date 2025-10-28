@@ -71,6 +71,7 @@ import com.google.gson.Gson;
  * Servlet for CometVisu files
  *
  * @author Tobias Bräutigam - Initial contribution
+ * @author Mark Herwege - Support aliases
  */
 @NonNullByDefault
 public class CometVisuServlet extends HttpServlet {
@@ -323,7 +324,8 @@ public class CometVisuServlet extends HttpServlet {
                             .entrySet().iterator();
                     QueryablePersistenceService persistenceService = pit.next().getValue();
                     // Get the data from the persistence store
-                    Iterable<HistoricItem> result = persistenceService.query(filter);
+                    String alias = CometVisuApp.getAliases(persistenceService.getId()).get(item.getName());
+                    Iterable<HistoricItem> result = persistenceService.query(filter, alias);
                     Iterator<HistoricItem> it = result.iterator();
                     boolean forceStop = false;
                     while (!forceStop && !it.hasNext()) {
@@ -411,6 +413,7 @@ public class CometVisuServlet extends HttpServlet {
                 response.flushBuffer();
             }
         }
+
     }
 
     /**
